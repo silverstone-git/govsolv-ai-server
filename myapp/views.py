@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 import json
@@ -35,15 +35,10 @@ def spam(request):
     except Exception as error:
         print(error)
     spam_res = spam_check(message)
-    spam_string = "true"
-    if spam_res[0]:
-        spam_string = "true"
-    else:
-        spam_string = "false"
-    spam_probability = str(spam_res[1])
+    spam_probability = spam_res[1]
     if access and message and access == settings.ACCESS_TOKEN:
-        return HttpResponse("{'success': true, 'data': {'spam': " + spam_string + ", 'probability': " + spam_probability + "}, 'message': 'Successfully evaluated'}", status = 200)
+        return JsonResponse({'success': True, 'data': {'spam': spam_res[0], 'probability': spam_res[1]}, 'message': 'Successfully evaluated'}, status = 200)
     elif access != settings.ACCESS_TOKEN:
-        return HttpResponse("{'success': false, 'data': {}, 'message': 'Wrong Access Token'}", status = 404)
+        return JsonResponse({'success': False, 'data': {}, 'message': 'Wrong Access Token'}, status = 404)
     else:
-        return HttpResponse("{'success': false, 'data': {}, 'message': 'Missing some properties in request, did you give message and access in the request body?'}", status = 400)
+        return JsonResponse({'success': False, 'data': {}, 'message': 'Missing some properties in request, did you give message and access in the request body?'}, status = 400)
