@@ -42,7 +42,7 @@ def spam(request):
         spam_string = "false"
     spam_probability = str(spam_res[1])
     if access and message and access == settings.ACCESS_TOKEN:
-        return HttpResponse("{'success': true, 'data': {spam: " + spam_string + ", probability: " + spam_probability + "}, 'message': 'Successfully evaluated'}", status = 200)
+        return HttpResponse("{'success': true, 'data': {'spam': " + spam_string + ", 'probability': " + spam_probability + "}, 'message': 'Successfully evaluated'}", status = 200)
     elif access != settings.ACCESS_TOKEN:
         return HttpResponse("{'success': false, 'data': {}, 'message': 'Wrong Access Token'}", status = 404)
     else:
