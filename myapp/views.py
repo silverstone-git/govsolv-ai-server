@@ -20,7 +20,35 @@ def spam_check(message):
     isSpam = True
     if probRand > 0.5:
         isSpam = False
-    return [isSpam, probability]
+
+
+    max_len = 50
+    trunc_type = "post"
+    padding_type = "post"
+    oov_tok = "<OOV>"
+    vocab_size = 500
+    
+    tokenizer = Tokenizer(num_words = vocab_size, char_level=False, oov_token = oov_tok)
+    
+    def predict_spam(predict_msg):
+        new_seq = tokenizer.texts_to_sequences(predict_msg)
+        padded = pad_sequences(new_seq, maxlen =max_len,
+        padding = padding_type,
+        truncating=trunc_type)
+        return (model1.predict(padded))
+
+    a=predict_spam(predict_msg)
+    last_prob = a[-1]
+
+    return isSpam
+
+
+
+def which_dept(message):
+    # string ->  preprocessing -> model -> class -> department string
+    return "Department ??"
+
+
 
 
 @csrf_exempt
@@ -34,8 +62,14 @@ def spam(request):
         message = body['message']
     except Exception as error:
         print(error)
-    spam_res = spam_check(message)
+    spam_res = [spam_check(message), 100]
     spam_probability = spam_res[1]
+    
+
+    #####
+    # data -> {"spam"; "dept", ""}
+    #####
+    
     if access and message and access == settings.ACCESS_TOKEN:
         return JsonResponse({'success': True, 'data': {'spam': spam_res[0], 'probability': spam_res[1]}, 'message': 'Successfully evaluated'}, status = 200)
     elif access != settings.ACCESS_TOKEN:
