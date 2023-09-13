@@ -4,6 +4,9 @@ import re
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 
+import pathlib
+parent_dir = pathlib.Path(__file__).parent.resolve()
+
 REPLACE_BY_SPACE_RE = re.compile('[/(){}\|@,;]')
 BAD_SYMBOLS_RE = re.compile('[^0-9a-z #+_]')
 
@@ -23,18 +26,33 @@ MAX_SEQUENCE_LENGTH = 20
 # This is fixed.
 EMBEDDING_DIM = 2
 
-#1:  "Dept of Jal Shakti"
-#Test Case:
-# 0: These toll rate problems have become a major headache. I'm pleading for someone to step in and bring some order to this chaos. Personally, it's been a constant headache dealing with these issues.
-#1: "I'm concerned about the water quality in our homes. It's been consistently dirty, and we're worried about its impact on our health."
+
+def get_train_messages():
+    train_msg = -1
+
+    df = -1
+    with open(parent_dir / "train_msg.pkl", "rb") as f1:
+        #train_msg = pickle.load(f1)
+        df = pd.compat.pickle_compat.load(f1)
+    return df
+
+
 
 def predict_dept(message):
 
     model = False
-    with open("department_model.pkl", "rb") as f1:
+    with open(parent_dir / "department_model.pkl", "rb") as f1:
         model = pickle.load(f1)
 
+    """
+    training_messages = get_train_messages()
+    if training_messages == -1:
+        # file error in train msg case
+        return -1
+    """
+
     if not model:
+        print("\n there is no such thing \n")
         return -1
 
     DF=pd.DataFrame({'message':[message]})
@@ -54,8 +72,16 @@ def predict_dept(message):
 def predict_spam(message):
 
     model = False
-    with open("spam_model.pkl", "rb") as f1:
+    with open(parent_dir / "spam_model.pkl", "rb") as f1:
         model = pickle.load(f1)
+
+    training_messages = get_train_messages()
+
+    """
+    if training_messages == -1:
+        # file error in train msg case
+        return -1
+    """
 
     if not model:
         return -1
@@ -69,18 +95,24 @@ def predict_spam(message):
     tokenizer = Tokenizer(num_words = vocab_size, char_level=False, oov_token = oov_tok)
 
     
-    def predict_spam(predict_msg):
-        new_seq = tokenizer.texts_to_sequences(predict_msg)
+    def predict_spam_inner(predict_msg):
+        df = pd.DataFrame({"message": [predict_msg]})
+
+        print("df of the train messages: ", training_messages)
+        tokenizer.fit_on_texts(training_messages)
+        new_seq = tokenizer.texts_to_sequences(df['message'].values)
         padded = pad_sequences(new_seq, maxlen =max_len,
         padding = padding_type,
         truncating=trunc_type)
         return (model.predict(padded))
 
-    a=predict_spam(message)
-    last_prob = a[-1]
+    a=predict_spam_inner(message)
+    last_prob = a[0][-1]
+
+    print("in the end, the last_prob is: ", last_prob)
 
     isSpam = True
-    if last_prob < 0.1:
+    if last_prob < 0.5:
         isSpam = False
 
     return isSpam
