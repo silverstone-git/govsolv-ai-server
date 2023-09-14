@@ -39,6 +39,8 @@ def evaulate_message(request):
     model_error = False
     spam_model = True
 
+    print("\n MESSAGE RECEIVED -> {}  \n".format(message))
+
     # call spam
     spam = predict_spam(message)
 
@@ -49,21 +51,21 @@ def evaulate_message(request):
 
     department = -1
     if spam != -1 and not spam:
+
+        print("\n trying getting the department\n")
         try:
             department = predict_dept(message)
             print("department -> ", department)
             if department == -1:
+                print("dept model handler gave error, setting response 500")
                 model_error = True
         except:
+            print("\n smoe eror occured while trying yhe predict_dept function\n")
             pass
 
-    if access and message and not model_error:
-        return JsonResponse({'success': True, 'data': {'spam': spam, 'department': department}, 'message': 'Successfully evaluated'}, status = 200)
-    elif access and message and department == -1:
-        return JsonResponse({'success': False, 'data': {}, 'message': 'Department Decision error'}, status = 500)
-
-    elif model_error:
+    if model_error:
         return JsonResponse({'success': False, 'data': {}, 'message': 'Model File Parsing Error'}, status = 500)
-
+    elif access and message:
+        return JsonResponse({'success': True, 'data': {'spam': spam, 'department': int(department)}, 'message': 'Successfully evaluated'})
     else:
         return JsonResponse({'success': False, 'data': {}, 'message': 'Missing some properties in request, did you give message and access in the request body?'}, status = 400)

@@ -3,21 +3,29 @@ import pandas as pd
 import re
 from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
 
 import pathlib
 parent_dir = pathlib.Path(__file__).parent.resolve()
 
+
 REPLACE_BY_SPACE_RE = re.compile('[/(){}\|@,;]')
 BAD_SYMBOLS_RE = re.compile('[^0-9a-z #+_]')
+STOPWORDS = set(stopwords.words('english'))
+
 
 def clean_text(text):
     
     text = text.lower() # lowercase text
+    text = ' '.join(word for word in text.split() if word not in STOPWORDS) # remove stopwors from text
     text = REPLACE_BY_SPACE_RE.sub(' ', text) # replace REPLACE_BY_SPACE_RE symbols by space in text. substitute the matched string in REPLACE_BY_SPACE_RE with space.
     text = BAD_SYMBOLS_RE.sub('', text) # remove symbols which are in BAD_SYMBOLS_RE from text. substitute the matched string in BAD_SYMBOLS_RE with nothing. 
     text = text.replace('x', '')
-    #text = ' '.join(word for word in text.split() if word not in STOPWORDS) # remove stopwors from text
+    
     return text
+
 
 # The maximum number of words to be used. (most frequent)
 MAX_NB_WORDS = 100
@@ -37,12 +45,25 @@ def get_train_messages():
     return df
 
 
+def get_vectorizer():
+    vectorizer = -1
+    print("\ni AM BEFORE VECTORIZER WITH BLOCK\n")
+    with open(parent_dir / "vectorizer.pkl", "rb") as f1:
+        vectorizer = pickle.load(f1)
+    print("\ngot vectorizer => \n", vectorizer, "\n")
+    return vectorizer
+
+
 
 def predict_dept(message):
+
+    print("pickle loading the model --> \n")
 
     model = False
     with open(parent_dir / "department_model.pkl", "rb") as f1:
         model = pickle.load(f1)
+
+    print("\ngot model -> ", model, "\n")
 
     """
     training_messages = get_train_messages()
@@ -55,18 +76,24 @@ def predict_dept(message):
         print("\n there is no such thing \n")
         return -1
 
+    vectorizer = -1
+    try:
+        vectorizer = get_vectorizer()
+    except Exception as e:
+        print(e)
+
+    if vectorizer == -1:
+        return -1
+
+    print("\n after vectorizer gettings, cleaning and predicting ... -> ", model, "\n")
+
     DF=pd.DataFrame({'message':[message]})
     DF['message']=DF['message'].apply(clean_text)
+    clean_message = DF['message']
+    vecced_message=vectorizer.transform(clean_message)
+    y=model.predict(vecced_message)
     
-    tokenizer = Tokenizer(num_words=MAX_NB_WORDS, filters='!"#$%&()*+,-./:;<=>?@[\]^_`{|}~', lower=True)
-    tokenizer.fit_on_texts(DF['message'].values)
-    
-    x=tokenizer.texts_to_sequences(DF['message'].values)
-    x = pad_sequences(x, maxlen=MAX_SEQUENCE_LENGTH)
-    y=model.predict(x)
-
-    ans=int(y[0][0]>=0.6)
-    return ans
+    return y[0]
 
 
 def predict_spam(message):
@@ -90,7 +117,7 @@ def predict_spam(message):
     trunc_type = "post"
     padding_type = "post"
     oov_tok = "<OOV>"
-    vocab_size = 500
+    vocab_size = 70
     
     tokenizer = Tokenizer(num_words = vocab_size, char_level=False, oov_token = oov_tok)
 
@@ -98,7 +125,7 @@ def predict_spam(message):
     def predict_spam_inner(predict_msg):
         df = pd.DataFrame({"message": [predict_msg]})
 
-        print("df of the train messages: ", training_messages)
+        #print("df of the train messages: ", training_messages)
         tokenizer.fit_on_texts(training_messages)
         new_seq = tokenizer.texts_to_sequences(df['message'].values)
         padded = pad_sequences(new_seq, maxlen =max_len,
