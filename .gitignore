@@ -1,7 +1,5 @@
 myapp/__init__.py
 myapp/migrations/
-myapp/dept_model.pkl
-myapp/spam_model.pkl
 db.sqlite3
 .env
 serverji/.env
