@@ -15,13 +15,14 @@ from .model_handler import *
 
 
 def index(request):
-    return HttpResponse("Hemlo domst")
+    return render(request, "model_check.html", {"access_token": settings.ACCESS_TOKEN.strip()})
 
 
 @csrf_exempt
-def evaulate_message(request):
+def evaluate_message(request):
     access = ""
     message = ""
+
     try:
         body_unicode = request.body.decode('utf-8')
         body = json.loads(body_unicode)

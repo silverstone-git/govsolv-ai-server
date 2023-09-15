@@ -1,0 +1,58 @@
+{% extends 'base_temp.html' %}
+{% block 'title' %} Model tester
+{% endblock 'title' %}
+{% block 'body' %}
+
+<style>
+.send-form {
+	display: "flex";
+	flex-direction: "column";
+	gap: "5px"
+}
+</style>
+
+<form id="send-form" class="send-form">
+  <label for="" id="input-message">Enter Message</label>
+  <input type="text" id="input-message" name="message" />
+  <button type="submit">Submit Grievance</button>
+</form>
+<br>
+<div id="status-div">
+</div>
+
+<script>
+	const form = document.getElementById('send-form');
+
+	const dept_array = ["Department of Road and Transport", "Department of Jal Shakti"];
+
+	form.addEventListener('submit', (event) => {
+		event.preventDefault();
+		formEl = event.target;
+		input_message = formEl.childNodes["3"];
+		console.log(input_message.value);
+		const status_div = document.getElementById('status-div');
+		status_div.innerHTML = "Loading...."
+		fetch("http://localhost:8000/spam-detector/", {
+			method: "POST",
+			headers: {
+				"Content-type": "application/json"
+			},
+			body: JSON.stringify({
+				"message": input_message.value.trim(),
+				"access": "{{ access_token }}"
+			})}
+		).then((val) => {
+				return val.json()
+			}).then((val) => {
+				console.log(val.data);
+				if(val.data.spam) {
+					status_div.innerHTML = "Marked Spam";
+
+				} else {
+					status_div.innerHTML = dept_array[val.data.department];
+				}
+			});
+		});
+</script>
+
+{% endblock 'body' %}
