@@ -32,7 +32,7 @@
 		console.log(input_message.value);
 		const status_div = document.getElementById('status-div');
 		status_div.innerHTML = "Loading...."
-		fetch("http://localhost:8000/spam-detector/", {
+		fetch("/spam-detector/", {
 			method: "POST",
 			headers: {
 				"Content-type": "application/json"
