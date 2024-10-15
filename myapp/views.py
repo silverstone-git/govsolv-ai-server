@@ -2,13 +2,9 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
 import json
-import pickle
 from random import random
 import pandas as pd
-import re
 from .model_handler import *
 
 # Create your views here.

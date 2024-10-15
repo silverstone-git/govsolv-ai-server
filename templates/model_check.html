@@ -4,17 +4,28 @@
 {% block 'body' %}
 
 <style>
-.send-form {
-	display: "flex";
-	flex-direction: "column";
-	gap: "5px"
-}
+  .send-form {
+    display: "flex";
+    flex-direction: "column";
+    gap: "5px";
+  }
+
+  .submit-button {
+    padding: 4px;
+    background: rgb(20, 210, 180);
+    color: rgb(5, 80, 90);
+  }
+
+  #input-message {
+    font-size: 18px;
+  }
+
 </style>
 
 <form id="send-form" class="send-form">
-  <label for="" id="input-message">Enter Message</label>
-  <input type="text" id="input-message" name="message" />
-  <button type="submit">Submit Grievance</button>
+  <label for="" id="input-message-label">Enter Message</label>
+  <textarea rows="10" cols="100" type="text" id="input-message" name="message"></textarea>
+  <button type="submit" class="submit-button"> Submit Grievance </button>
 </form>
 <br>
 <div id="status-div">
